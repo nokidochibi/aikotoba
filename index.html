@@ -42,20 +42,13 @@
             scroll-margin-top: 5rem;
         }
 
-        /* アニメーション定義 */
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        /* フェードインアニメーション（一括表示用） */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
         }
-        .animate-slide-in {
-            opacity: 0; /* 初期状態は非表示 */
-            animation: slideIn 0.4s ease-out forwards;
+        .animate-fade-in {
+            animation: fadeIn 0.3s ease-out forwards;
         }
     </style>
 </head>
@@ -111,7 +104,7 @@
         // ==========================================
         // バージョン管理
         // ==========================================
-        const APP_VERSION = 'v0.1.10';
+        const APP_VERSION = 'v0.1.12';
 
         // ==========================================
         // 設定
@@ -193,18 +186,17 @@
             }
 
             // ==========================================
-            // 結果表示: ずららら…と追従スクロール
+            // 結果表示: 一括表示
             // ==========================================
-            let contentHtml = '<div class="flex flex-col space-y-3">';
+            let contentHtml = '<div class="flex flex-col space-y-3 animate-fade-in">';
             
-            data.results.forEach((item, index) => {
-                const delay = index * 100;
+            data.results.forEach((item) => {
+                // v0.1.12変更: 余白を p-3 から p-2 に変更してタイトに
                 contentHtml += `
-                    <div style="animation-delay: ${delay}ms" 
-                         onclick="copyToClipboard('${item.display_text.replace(/'/g, "\\'")}')" 
-                         class="animate-slide-in bg-orange-50/50 border border-orange-100 rounded-xl p-3 cursor-pointer hover:bg-orange-100 transition relative group select-none">
+                    <div onclick="copyToClipboard('${item.display_text.replace(/'/g, "\\'")}')" 
+                         class="bg-orange-50/50 border border-orange-100 rounded-xl p-2 cursor-pointer hover:bg-orange-100 transition relative group select-none">
                         <p class="text-sm font-bold text-gray-800 leading-relaxed">${item.display_text}</p>
-                        <div class="flex justify-end items-center mt-2">
+                        <div class="flex justify-end items-center mt-1">
                             <span class="text-orange-400 opacity-70 group-hover:opacity-100 transition p-1">
                                 <i data-lucide="copy" class="w-4 h-4"></i>
                             </span>
@@ -214,10 +206,9 @@
             });
             contentHtml += '</div>';
             
-            // フッター部分（件数 + トップへ移動）
-            const footerDelay = data.results.length * 100;
+            // フッター部分
             contentHtml += `
-                <div style="animation-delay: ${footerDelay}ms" class="animate-slide-in">
+                <div class="animate-fade-in">
                     <p class="mt-3 text-[10px] text-gray-400 text-right">
                         上記${data.results.length}箇所のフレーズで見つかったよ♪
                     </p>
@@ -230,31 +221,13 @@
                 </div>
             `;
 
-            // ここでは自動スクロールOFFでメッセージを追加
-            addMessage(contentHtml, 'bot', false);
-            
-            // --- スクロール追従ロジック ---
-            const lastMessage = chatContainer.lastElementChild;
-            
-            if(lastMessage) {
-                // 1. まず回答の「先頭」が見える位置へスクロール
-                lastMessage.scrollIntoView({behavior: "smooth", block: "start"});
-                
-                // 2. アニメーションに合わせて、各行が表示されるタイミングでそこまでスクロールさせる
-                const animatedItems = lastMessage.querySelectorAll('.animate-slide-in');
-                animatedItems.forEach((item, index) => {
-                    const delay = index * 100;
-                    setTimeout(() => {
-                        // block: 'nearest' は「もし画面外なら、画面に入る最小限のスクロールをする」という便利な指定
-                        item.scrollIntoView({behavior: 'smooth', block: 'nearest'});
-                    }, delay);
-                });
-            }
+            // 第3引数(shouldScroll)を true にして、回答後に最下部へスクロール
+            addMessage(contentHtml, 'bot', true);
             
             lucide.createIcons();
         }
 
-        // addMessage関数を修正: 第3引数でスクロール制御を追加
+        // addMessage関数
         function addMessage(htmlOrText, type, shouldScroll = true) {
             const div = document.createElement('div');
             div.className = `flex items-start space-x-2 message-row ${type === 'user' ? 'justify-end' : ''}`;
@@ -274,7 +247,7 @@
             div.innerHTML = type === 'bot' ? iconHtml + contentHtml : contentHtml;
             chatContainer.appendChild(div);
             
-            // 引数がtrueのときだけ一番下へスクロール（通常時）
+            // trueのときは一番下へスクロール
             if (shouldScroll) {
                 scrollToBottom();
             }
