@@ -42,9 +42,7 @@
             scroll-margin-top: 5rem;
         }
 
-        /* v0.1.9 追加: 
-           検索結果が「ずららら…」と表示されるためのアニメーション定義
-        */
+        /* アニメーション定義 */
         @keyframes slideIn {
             from {
                 opacity: 0;
@@ -113,7 +111,7 @@
         // ==========================================
         // バージョン管理
         // ==========================================
-        const APP_VERSION = 'v0.1.9';
+        const APP_VERSION = 'v0.1.10';
 
         // ==========================================
         // 設定
@@ -195,21 +193,18 @@
             }
 
             // ==========================================
-            // 結果表示: ずららら…と表示するアニメーション付き
+            // 結果表示: ずららら…と追従スクロール
             // ==========================================
             let contentHtml = '<div class="flex flex-col space-y-3">';
             
             data.results.forEach((item, index) => {
-                // indexを使って遅延時間（ms）を計算。1つにつき0.1秒ずつ遅らせる
                 const delay = index * 100;
-
                 contentHtml += `
                     <div style="animation-delay: ${delay}ms" 
                          onclick="copyToClipboard('${item.display_text.replace(/'/g, "\\'")}')" 
                          class="animate-slide-in bg-orange-50/50 border border-orange-100 rounded-xl p-3 cursor-pointer hover:bg-orange-100 transition relative group select-none">
                         <p class="text-sm font-bold text-gray-800 leading-relaxed">${item.display_text}</p>
                         <div class="flex justify-end items-center mt-2">
-                            <!-- テキストを削除し、アイコンのみ表示 -->
                             <span class="text-orange-400 opacity-70 group-hover:opacity-100 transition p-1">
                                 <i data-lucide="copy" class="w-4 h-4"></i>
                             </span>
@@ -217,13 +212,10 @@
                     </div>
                 `;
             });
-            
             contentHtml += '</div>';
             
-            // 件数表示（アニメーション完了後に見えるように少し遅延）
+            // フッター部分（件数 + トップへ移動）
             const footerDelay = data.results.length * 100;
-            
-            // 件数とボタンもアニメーション対象にする
             contentHtml += `
                 <div style="animation-delay: ${footerDelay}ms" class="animate-slide-in">
                     <p class="mt-3 text-[10px] text-gray-400 text-right">
@@ -238,11 +230,32 @@
                 </div>
             `;
 
-            addMessage(contentHtml, 'bot');
+            // ここでは自動スクロールOFFでメッセージを追加
+            addMessage(contentHtml, 'bot', false);
+            
+            // --- スクロール追従ロジック ---
+            const lastMessage = chatContainer.lastElementChild;
+            
+            if(lastMessage) {
+                // 1. まず回答の「先頭」が見える位置へスクロール
+                lastMessage.scrollIntoView({behavior: "smooth", block: "start"});
+                
+                // 2. アニメーションに合わせて、各行が表示されるタイミングでそこまでスクロールさせる
+                const animatedItems = lastMessage.querySelectorAll('.animate-slide-in');
+                animatedItems.forEach((item, index) => {
+                    const delay = index * 100;
+                    setTimeout(() => {
+                        // block: 'nearest' は「もし画面外なら、画面に入る最小限のスクロールをする」という便利な指定
+                        item.scrollIntoView({behavior: 'smooth', block: 'nearest'});
+                    }, delay);
+                });
+            }
+            
             lucide.createIcons();
         }
 
-        function addMessage(htmlOrText, type) {
+        // addMessage関数を修正: 第3引数でスクロール制御を追加
+        function addMessage(htmlOrText, type, shouldScroll = true) {
             const div = document.createElement('div');
             div.className = `flex items-start space-x-2 message-row ${type === 'user' ? 'justify-end' : ''}`;
 
@@ -260,7 +273,11 @@
 
             div.innerHTML = type === 'bot' ? iconHtml + contentHtml : contentHtml;
             chatContainer.appendChild(div);
-            scrollToBottom();
+            
+            // 引数がtrueのときだけ一番下へスクロール（通常時）
+            if (shouldScroll) {
+                scrollToBottom();
+            }
         }
 
         function addLoading() {
