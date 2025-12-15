@@ -27,8 +27,8 @@
         
         <!-- hokiさん (初期メッセージ) -->
         <div class="flex items-start space-x-2">
-            <!-- アイコン画像: Twitter連動 (unavatar.io) -->
-            <img src="https://unavatar.io/twitter/noki_dochibi" alt="hoki" class="w-10 h-10 rounded-full border border-gray-200">
+            <!-- アイコン画像: JSで生成して挿入します -->
+            <img id="bot-icon-initial" src="" alt="hoki" class="w-10 h-10 rounded-full border border-gray-200 bg-gray-100">
             <div class="bg-white p-3 rounded-lg rounded-tl-none shadow-sm max-w-[80%]">
                 <p class="text-sm">好きなフレーズを入力してね。<br>aikoの曲から探してくるよ！</p>
             </div>
@@ -61,19 +61,36 @@
 
     <script>
         // ==========================================
-        // 設定: ここにGASのウェブアプリURLを貼り付けます
+        // バージョン管理: 画像が出ないときはここを変える
+        // ==========================================
+        const APP_VERSION = 'v0.1.2';
+
+        // ==========================================
+        // 設定: GASのウェブアプリURL
         // ==========================================
         const GAS_API_URL = "https://script.google.com/macros/s/AKfycby49eACsPr_lGblpklhK13gt4TroRwNyKwnQcKQ3GPhACQ8zV96YZ9_CDXfFn5wOj85/exec"; 
         
-        // Twitter ID設定
+        // Twitter ID設定 & キャッシュバスター
+        // URLの末尾に ?v=... をつけることで、ブラウザに「新しい画像だよ」と伝えます
         const TWITTER_ID = "noki_dochibi";
-        const ICON_URL = `https://unavatar.io/twitter/${TWITTER_ID}`;
+        const ICON_URL = `https://unavatar.io/twitter/${TWITTER_ID}?v=${APP_VERSION}`;
 
         const chatContainer = document.getElementById('chat-container');
         const searchForm = document.getElementById('search-form');
         const searchInput = document.getElementById('search-input');
         const randomArea = document.getElementById('random-lyric-area');
         const toast = document.getElementById('toast');
+
+        // 初期化処理
+        window.addEventListener('DOMContentLoaded', () => {
+            // 1. 初期アイコンにURLをセット
+            const initialIcon = document.getElementById('bot-icon-initial');
+            if (initialIcon) initialIcon.src = ICON_URL;
+
+            // 2. 画像のプリロード (表示速度アップのため裏読みしておく)
+            const preloadImg = new Image();
+            preloadImg.src = ICON_URL;
+        });
 
         // メッセージ送信時の処理
         searchForm.addEventListener('submit', async (e) => {
@@ -90,7 +107,6 @@
 
             try {
                 // 3. GASへ検索リクエスト
-                // GASはリダイレクトを返すため、redirect: 'follow' が重要
                 const response = await fetch(`${GAS_API_URL}?q=${encodeURIComponent(query)}`);
                 const data = await response.json();
 
@@ -129,7 +145,7 @@
                 addMessage(`「${data.query}」は見つからなかったけど...<br>もしかして、これかな？`, 'bot');
             }
 
-            // 結果を吹き出しで表示 (複数ある場合はまとめて表示するか、個別にするか。今回は個別に表示)
+            // 結果を吹き出しで表示
             data.results.forEach(item => {
                 addResultBubble(item.display_text);
             });
@@ -140,11 +156,11 @@
             const div = document.createElement('div');
             div.className = `flex items-start space-x-2 ${type === 'user' ? 'justify-end' : ''}`;
 
+            // Botのときだけアイコンを表示（プリロード済みのURLを使用）
             const iconHtml = type === 'bot' 
-                ? `<img src="${ICON_URL}" class="w-10 h-10 rounded-full border border-gray-200">` 
+                ? `<img src="${ICON_URL}" class="w-10 h-10 rounded-full border border-gray-200 bg-gray-100">` 
                 : '';
             
-            // ユーザーはオレンジ、Botは白
             const bgClass = type === 'user' ? 'bg-orange-500 text-white rounded-tr-none' : 'bg-white text-gray-800 rounded-tl-none';
             const contentHtml = `
                 <div class="${bgClass} p-3 rounded-lg shadow-sm max-w-[80%] text-sm break-words">
@@ -162,11 +178,9 @@
             const div = document.createElement('div');
             div.className = "flex items-start space-x-2";
             
-            // コピー機能を付与
-            const bubbleId = 'res-' + Date.now() + Math.random();
-            
+            // Botのアイコン（少し薄く）
             div.innerHTML = `
-                <img src="${ICON_URL}" class="w-10 h-10 rounded-full border border-gray-200 opacity-50"> <!-- 結果はちょっとアイコン薄くする等の演出も可 -->
+                <img src="${ICON_URL}" class="w-10 h-10 rounded-full border border-gray-200 opacity-50 bg-gray-100"> 
                 <div onclick="copyToClipboard('${text.replace(/'/g, "\\'")}')" 
                      class="bg-white border-2 border-orange-100 text-gray-800 p-3 rounded-lg rounded-tl-none shadow-sm max-w-[80%] cursor-pointer hover:bg-orange-50 active:bg-orange-100 transition relative group">
                     <p class="text-sm font-bold">${text}</p>
@@ -184,7 +198,7 @@
             div.id = id;
             div.className = "flex items-start space-x-2";
             div.innerHTML = `
-                <img src="${ICON_URL}" class="w-10 h-10 rounded-full border border-gray-200">
+                <img src="${ICON_URL}" class="w-10 h-10 rounded-full border border-gray-200 bg-gray-100">
                 <div class="bg-white p-3 rounded-lg rounded-tl-none shadow-sm">
                     <div class="flex space-x-1">
                         <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
@@ -209,13 +223,10 @@
 
         // クリップボードコピー
         function copyToClipboard(text) {
-            // テキストのみをコピー（HTMLタグ等を除く）
             const cleanText = text.replace(/<br>/g, '\n');
-            
             if (navigator.clipboard) {
                 navigator.clipboard.writeText(cleanText).then(() => showToast());
             } else {
-                // 古いブラウザ等のフォールバック
                 const textarea = document.createElement('textarea');
                 textarea.value = cleanText;
                 document.body.appendChild(textarea);
