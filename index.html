@@ -2,7 +2,12 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- 
+      viewport設定の変更: 
+      user-scalable=no, maximum-scale=1.0 を追加して、
+      スマホでのピンチイン・アウト（拡大縮小）を無効化しました。
+    -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>aikotoba - aiko歌詞検索</title>
     <!-- Tailwind CSS (デザイン用) -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -18,6 +23,13 @@
         
         /* 送信ボタンのアニメーション */
         .send-btn-active:active { transform: scale(0.9); }
+
+        /* iPhoneの下部エリア（ホームバー）対策 
+           env(safe-area-inset-bottom) は、スマホごとの安全な余白を自動計算してくれます
+        */
+        .safe-pb {
+            padding-bottom: env(safe-area-inset-bottom);
+        }
     </style>
 </head>
 <body class="bg-orange-50 text-gray-800 h-screen flex flex-col">
@@ -28,7 +40,8 @@
     </header>
 
     <!-- チャットエリア -->
-    <main id="chat-container" class="flex-1 overflow-y-auto p-4 space-y-4 no-scrollbar pb-32"> 
+    <!-- pb-40に変更して、底上げした入力エリアに隠れないようスクロール余白を多めに確保 -->
+    <main id="chat-container" class="flex-1 overflow-y-auto p-4 space-y-4 no-scrollbar pb-40"> 
         
         <!-- hokiさん (初期メッセージ) -->
         <div class="flex items-start space-x-2">
@@ -41,7 +54,13 @@
     </main>
 
     <!-- 入力エリア (スマートUI × オレンジ) -->
-    <footer class="bg-white px-3 py-2 border-t border-gray-100 fixed bottom-0 w-full safe-bottom">
+    <!-- 
+        修正ポイント: 
+        1. fixed bottom-0 はそのまま
+        2. style属性で padding-bottom に余白を追加 (安全領域 + 20px)
+        これでLINEのように少し浮いた位置に入力欄が来ます
+    -->
+    <footer class="bg-white px-3 py-2 border-t border-gray-100 fixed bottom-0 w-full safe-pb" style="padding-bottom: calc(env(safe-area-inset-bottom) + 20px);">
         <!-- ランダム歌詞表示エリア -->
         <div id="random-lyric-area" class="text-[10px] text-gray-400 text-center mb-1 h-4 truncate">
             <!-- ここにランダムな歌詞が表示されます -->
@@ -61,8 +80,6 @@
                 <i data-lucide="send" class="w-6 h-6 fill-current"></i>
             </button>
         </form>
-        <!-- iPhoneの下部バー対策の余白 -->
-        <div class="h-safe-bottom"></div>
     </footer>
 
     <!-- トースト通知 (コピー完了時) -->
@@ -74,7 +91,7 @@
         // ==========================================
         // バージョン管理
         // ==========================================
-        const APP_VERSION = 'v0.1.4';
+        const APP_VERSION = 'v0.1.5';
 
         // ==========================================
         // 設定: GASのウェブアプリURL
