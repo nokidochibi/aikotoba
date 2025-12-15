@@ -6,6 +6,8 @@
     <title>aikotoba - aiko歌詞検索</title>
     <!-- Tailwind CSS (デザイン用) -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons (アイコン用) -->
+    <script src="https://unpkg.com/lucide@latest"></script>
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
     <style>
@@ -13,57 +15,66 @@
         /* チャットのスクロールバーを隠す */
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        /* 送信ボタンのアニメーション */
+        .send-btn-active:active { transform: scale(0.9); }
     </style>
 </head>
 <body class="bg-orange-50 text-gray-800 h-screen flex flex-col">
 
     <!-- ヘッダー -->
-    <header class="bg-white p-4 shadow-sm flex items-center justify-center sticky top-0 z-10">
-        <h1 class="text-xl font-bold text-orange-600 tracking-widest">aikotoba</h1>
+    <header class="bg-white/90 backdrop-blur-sm p-3 shadow-sm flex items-center justify-center sticky top-0 z-10 border-b border-orange-100">
+        <h1 class="text-lg font-bold text-orange-600 tracking-wider">aikotoba</h1>
     </header>
 
     <!-- チャットエリア -->
-    <main id="chat-container" class="flex-1 overflow-y-auto p-4 space-y-4 no-scrollbar pb-24">
+    <main id="chat-container" class="flex-1 overflow-y-auto p-4 space-y-4 no-scrollbar pb-32"> 
         
         <!-- hokiさん (初期メッセージ) -->
         <div class="flex items-start space-x-2">
-            <!-- アイコン画像: JSで生成して挿入します -->
-            <img id="bot-icon-initial" src="" alt="hoki" class="w-10 h-10 rounded-full border border-gray-200 bg-gray-100">
-            <div class="bg-white p-3 rounded-lg rounded-tl-none shadow-sm max-w-[80%]">
-                <p class="text-sm">好きなフレーズを入力してね。<br>aikoの曲から探してくるよ！</p>
+            <img id="bot-icon-initial" src="" alt="hoki" class="w-10 h-10 rounded-full border border-gray-200 bg-white">
+            <div class="bg-white p-3 rounded-2xl rounded-tl-none shadow-sm max-w-[80%]">
+                <p class="text-sm leading-relaxed">好きなフレーズを入力してね。<br>aikoの曲から探してくるよ！</p>
             </div>
         </div>
 
     </main>
 
-    <!-- 入力エリア -->
-    <footer class="bg-white p-4 border-t border-gray-200 fixed bottom-0 w-full">
+    <!-- 入力エリア (スマートUI × オレンジ) -->
+    <footer class="bg-white px-3 py-2 border-t border-gray-100 fixed bottom-0 w-full safe-bottom">
         <!-- ランダム歌詞表示エリア -->
-        <div id="random-lyric-area" class="text-xs text-gray-400 text-center mb-2 h-4 truncate">
+        <div id="random-lyric-area" class="text-[10px] text-gray-400 text-center mb-1 h-4 truncate">
             <!-- ここにランダムな歌詞が表示されます -->
         </div>
 
-        <form id="search-form" class="flex gap-2">
-            <input type="text" id="search-input" 
-                class="flex-1 border border-gray-300 rounded-full px-4 py-2 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition"
-                placeholder="例: 甘い匂いに" required>
+        <form id="search-form" class="flex items-center gap-2">
+            <!-- 入力欄 -->
+            <div class="flex-1 bg-gray-100 rounded-full flex items-center px-4 py-2">
+                <input type="text" id="search-input" 
+                    class="flex-1 bg-transparent border-none focus:outline-none text-sm placeholder-gray-400"
+                    placeholder="メッセージを入力" required autocomplete="off">
+            </div>
+            
+            <!-- 送信ボタン (オレンジの紙飛行機) -->
             <button type="submit" 
-                class="bg-orange-500 text-white rounded-full px-6 py-2 font-bold hover:bg-orange-600 active:bg-orange-700 transition">
-                送信
+                class="send-btn-active text-orange-500 p-2 rounded-full hover:bg-orange-50 transition flex-shrink-0">
+                <i data-lucide="send" class="w-6 h-6 fill-current"></i>
             </button>
         </form>
+        <!-- iPhoneの下部バー対策の余白 -->
+        <div class="h-safe-bottom"></div>
     </footer>
 
     <!-- トースト通知 (コピー完了時) -->
-    <div id="toast" class="fixed top-20 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs py-2 px-4 rounded-full opacity-0 transition-opacity duration-300 pointer-events-none">
+    <div id="toast" class="fixed top-20 left-1/2 transform -translate-x-1/2 bg-gray-800/80 backdrop-blur text-white text-xs py-2 px-4 rounded-full opacity-0 transition-opacity duration-300 pointer-events-none z-50 shadow-lg">
         コピーしました！
     </div>
 
     <script>
         // ==========================================
-        // バージョン管理: 画像が出ないときはここを変える
+        // バージョン管理
         // ==========================================
-        const APP_VERSION = 'v0.1.2';
+        const APP_VERSION = 'v0.1.4';
 
         // ==========================================
         // 設定: GASのウェブアプリURL
@@ -71,7 +82,6 @@
         const GAS_API_URL = "https://script.google.com/macros/s/AKfycby49eACsPr_lGblpklhK13gt4TroRwNyKwnQcKQ3GPhACQ8zV96YZ9_CDXfFn5wOj85/exec"; 
         
         // Twitter ID設定 & キャッシュバスター
-        // URLの末尾に ?v=... をつけることで、ブラウザに「新しい画像だよ」と伝えます
         const TWITTER_ID = "noki_dochibi";
         const ICON_URL = `https://unavatar.io/twitter/${TWITTER_ID}?v=${APP_VERSION}`;
 
@@ -83,11 +93,12 @@
 
         // 初期化処理
         window.addEventListener('DOMContentLoaded', () => {
-            // 1. 初期アイコンにURLをセット
+            // アイコン設定
+            lucide.createIcons();
+            
             const initialIcon = document.getElementById('bot-icon-initial');
             if (initialIcon) initialIcon.src = ICON_URL;
 
-            // 2. 画像のプリロード (表示速度アップのため裏読みしておく)
             const preloadImg = new Image();
             preloadImg.src = ICON_URL;
         });
@@ -106,14 +117,11 @@
             const loadingId = addLoading();
 
             try {
-                // 3. GASへ検索リクエスト
                 const response = await fetch(`${GAS_API_URL}?q=${encodeURIComponent(query)}`);
                 const data = await response.json();
 
-                // ローディング削除
                 removeLoading(loadingId);
 
-                // 4. 結果の表示
                 if (data.status === 'success') {
                     handleSearchResults(data);
                 } else {
@@ -127,43 +135,38 @@
             }
         });
 
-        // 検索結果の処理
         function handleSearchResults(data) {
-            // ランダム歌詞の更新
             if (data.random_message) {
                 randomArea.textContent = data.random_message;
             }
 
-            // 結果がない場合
             if (data.results.length === 0) {
                 addMessage(`「${data.query}」は見つからなかったよ...💦`, 'bot');
                 return;
             }
 
-            // もしかして検索の場合
             if (data.is_fuzzy) {
                 addMessage(`「${data.query}」は見つからなかったけど...<br>もしかして、これかな？`, 'bot');
             }
 
-            // 結果を吹き出しで表示
             data.results.forEach(item => {
                 addResultBubble(item.display_text);
             });
         }
 
-        // 吹き出し追加関数 (type: 'user' | 'bot')
         function addMessage(text, type) {
             const div = document.createElement('div');
             div.className = `flex items-start space-x-2 ${type === 'user' ? 'justify-end' : ''}`;
 
-            // Botのときだけアイコンを表示（プリロード済みのURLを使用）
             const iconHtml = type === 'bot' 
-                ? `<img src="${ICON_URL}" class="w-10 h-10 rounded-full border border-gray-200 bg-gray-100">` 
+                ? `<img src="${ICON_URL}" class="w-10 h-10 rounded-full border border-gray-200 bg-white flex-shrink-0">` 
                 : '';
             
+            // デザイン調整: ユーザーはオレンジ(aikoカラー)、Botは白
             const bgClass = type === 'user' ? 'bg-orange-500 text-white rounded-tr-none' : 'bg-white text-gray-800 rounded-tl-none';
+            
             const contentHtml = `
-                <div class="${bgClass} p-3 rounded-lg shadow-sm max-w-[80%] text-sm break-words">
+                <div class="${bgClass} px-3 py-2 rounded-2xl shadow-sm max-w-[80%] text-sm break-words leading-relaxed">
                     ${text}
                 </div>
             `;
@@ -173,37 +176,34 @@
             scrollToBottom();
         }
 
-        // 結果用バブル（クリックでコピー）
         function addResultBubble(text) {
             const div = document.createElement('div');
             div.className = "flex items-start space-x-2";
             
-            // Botのアイコン（少し薄く）
             div.innerHTML = `
-                <img src="${ICON_URL}" class="w-10 h-10 rounded-full border border-gray-200 opacity-50 bg-gray-100"> 
+                <img src="${ICON_URL}" class="w-10 h-10 rounded-full border border-gray-200 opacity-50 bg-white flex-shrink-0"> 
                 <div onclick="copyToClipboard('${text.replace(/'/g, "\\'")}')" 
-                     class="bg-white border-2 border-orange-100 text-gray-800 p-3 rounded-lg rounded-tl-none shadow-sm max-w-[80%] cursor-pointer hover:bg-orange-50 active:bg-orange-100 transition relative group">
-                    <p class="text-sm font-bold">${text}</p>
-                    <span class="absolute right-2 bottom-1 text-[10px] text-gray-400 opacity-0 group-hover:opacity-100 transition">タップしてコピー</span>
+                     class="bg-white border-2 border-orange-100 text-gray-800 px-3 py-2 rounded-2xl rounded-tl-none shadow-sm max-w-[80%] cursor-pointer hover:bg-orange-50 active:bg-orange-100 transition relative group">
+                    <p class="text-sm font-bold leading-relaxed">${text}</p>
+                    <span class="absolute right-2 bottom-1 text-[9px] text-gray-400 opacity-0 group-hover:opacity-100 transition">タップしてコピー</span>
                 </div>
             `;
             chatContainer.appendChild(div);
             scrollToBottom();
         }
 
-        // ローディング表示
         function addLoading() {
             const id = 'loading-' + Date.now();
             const div = document.createElement('div');
             div.id = id;
             div.className = "flex items-start space-x-2";
             div.innerHTML = `
-                <img src="${ICON_URL}" class="w-10 h-10 rounded-full border border-gray-200 bg-gray-100">
-                <div class="bg-white p-3 rounded-lg rounded-tl-none shadow-sm">
+                <img src="${ICON_URL}" class="w-10 h-10 rounded-full border border-gray-200 bg-white flex-shrink-0">
+                <div class="bg-white px-4 py-3 rounded-2xl rounded-tl-none shadow-sm">
                     <div class="flex space-x-1">
-                        <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                        <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-75"></div>
-                        <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-150"></div>
+                        <div class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce"></div>
+                        <div class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce delay-75"></div>
+                        <div class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce delay-150"></div>
                     </div>
                 </div>
             `;
@@ -221,7 +221,6 @@
             chatContainer.scrollTop = chatContainer.scrollHeight;
         }
 
-        // クリップボードコピー
         function copyToClipboard(text) {
             const cleanText = text.replace(/<br>/g, '\n');
             if (navigator.clipboard) {
