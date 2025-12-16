@@ -21,6 +21,7 @@
             50% { opacity: .5; }
         }
 
+        /* フッターの高さ分だけ余白を空ける */
         .message-row { scroll-margin-top: 6rem; }
 
         @keyframes fadeIn {
@@ -49,15 +50,19 @@
             border-color: transparent #ffffff transparent transparent;
         }
 
+        /* タブボタンスタイル（上線に変更してボトムタブっぽく） */
         .tab-btn {
-            border-bottom-width: 2px;
+            border-top-width: 3px; 
+            border-bottom-width: 0;
             border-color: transparent;
             transition: all 0.3s;
-            opacity: 0.6;
+            opacity: 0.5;
+            color: #9ca3af; /* gray-400 */
         }
         .tab-btn.active {
             font-weight: bold;
             opacity: 1;
+            background-color: #f9fafb; /* gray-50 */
         }
         .theme-lyrics .tab-btn.active[data-tab="lyrics"] {
             border-color: #f97316;
@@ -102,7 +107,7 @@
         </div>
     </header>
 
-    <main id="chat-container-lyrics" class="flex-1 overflow-y-auto p-4 space-y-4 no-scrollbar pb-56"> 
+    <main id="chat-container-lyrics" class="flex-1 overflow-y-auto p-4 space-y-4 no-scrollbar pb-64"> 
         <div class="flex items-start space-x-2">
             <img class="bot-icon w-10 h-10 rounded-full border border-gray-200 bg-white shadow-sm z-10" alt="icon">
             <div class="bubble bubble-left bg-white p-3 shadow-sm max-w-[80%]">
@@ -113,7 +118,7 @@
         </div>
     </main>
 
-    <main id="chat-container-title" class="flex-1 overflow-y-auto p-4 space-y-4 no-scrollbar pb-56 hidden"> 
+    <main id="chat-container-title" class="flex-1 overflow-y-auto p-4 space-y-4 no-scrollbar pb-64 hidden"> 
         <div class="flex items-start space-x-2">
             <img class="bot-icon w-10 h-10 rounded-full border border-gray-200 bg-white shadow-sm z-10" alt="icon">
             <div class="bubble bubble-left bg-white p-3 shadow-sm max-w-[80%]">
@@ -124,22 +129,16 @@
         </div>
     </main>
 
-    <footer class="bg-white border-t border-gray-100 fixed bottom-0 w-full safe-pb z-30 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]" style="padding-bottom: calc(env(safe-area-inset-bottom));">
+    <!-- フッター (固定) -->
+    <footer class="bg-white border-t border-gray-100 fixed bottom-0 w-full safe-pb z-30 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] flex flex-col" style="padding-bottom: calc(env(safe-area-inset-bottom));">
         
+        <!-- 1. ランダム歌詞エリア -->
         <div id="random-lyric-container" class="bg-orange-50/50 border-b border-orange-100 py-1 px-4 transition-all duration-300 opacity-0 h-0 overflow-hidden">
              <div id="random-lyric-area" class="text-[10px] text-orange-400 text-center truncate h-4 leading-4"></div>
         </div>
 
-        <div class="flex w-full px-2 pt-1 pb-1 gap-2 text-xs font-medium justify-center bg-white">
-            <button id="tab-lyrics" data-tab="lyrics" onclick="switchTab('lyrics')" class="tab-btn active flex-1 py-4 text-center rounded-lg hover:bg-gray-50">
-                歌詞検索
-            </button>
-            <button id="tab-title" data-tab="title" onclick="switchTab('title')" class="tab-btn flex-1 py-4 text-center rounded-lg hover:bg-gray-50">
-                楽曲DB
-            </button>
-        </div>
-
-        <form id="search-form" class="flex items-center gap-2 px-3 pb-3 pt-1">
+        <!-- 2. 入力フォーム (上に移動) -->
+        <form id="search-form" class="flex items-center gap-2 px-3 py-3 border-b border-gray-50">
             <div class="flex-1 bg-gray-100 rounded-full flex items-center px-4 py-2.5 transition-colors focus-within:bg-white focus-within:ring-1 focus-within:ring-gray-200 border border-transparent focus-within:border-gray-200">
                 <input type="text" id="search-input" 
                     class="flex-1 bg-transparent border-none focus:outline-none text-sm placeholder-gray-400"
@@ -151,6 +150,19 @@
                 <i data-lucide="send" class="w-5 h-5 fill-current transition-colors duration-300"></i>
             </button>
         </form>
+
+        <!-- 3. タブ切り替え (最下部に移動) -->
+        <div class="flex w-full bg-white relative">
+            <button id="tab-lyrics" data-tab="lyrics" onclick="switchTab('lyrics')" class="tab-btn active flex-1 py-3 text-center transition-all flex flex-col items-center justify-center gap-1">
+                <i data-lucide="music" class="w-5 h-5 mb-0.5"></i>
+                <span class="text-base leading-none">歌詞</span>
+            </button>
+            <div class="w-[1px] bg-gray-100 my-2"></div> <!-- 区切り線 -->
+            <button id="tab-title" data-tab="title" onclick="switchTab('title')" class="tab-btn flex-1 py-3 text-center transition-all flex flex-col items-center justify-center gap-1">
+                <i data-lucide="disc" class="w-5 h-5 mb-0.5"></i>
+                <span class="text-base leading-none">楽曲</span>
+            </button>
+        </div>
     </footer>
 
     <div id="toast" class="fixed top-24 left-1/2 transform -translate-x-1/2 bg-gray-800/80 backdrop-blur text-white text-xs py-2 px-4 rounded-full opacity-0 transition-opacity duration-300 pointer-events-none z-50 shadow-lg">
@@ -171,20 +183,20 @@
             
             <div class="space-y-4 text-sm text-gray-700 leading-relaxed overflow-y-auto max-h-[60vh]">
                 <section>
-                    <h3 class="font-bold text-gray-800 mb-1">🟧 歌詞検索モード</h3>
+                    <h3 class="font-bold text-gray-800 mb-1">🟧 歌詞モード</h3>
                     <p class="text-xs">
                         「甘い匂いに」などのフレーズを入力すると、その歌詞が含まれる曲を探します。
                     </p>
                 </section>
                 <section>
-                    <h3 class="font-bold text-sky-600 mb-1">🟦 楽曲DBモード</h3>
+                    <h3 class="font-bold text-sky-600 mb-1">🟦 楽曲モード</h3>
                     <p class="text-xs">
                         曲名（例：「果てしない二人」）やアルバム名を入力すると、
                         発売日、収録順、当時のaikoの年齢などを表示します。
                     </p>
                 </section>
                 <section class="text-center pt-2">
-                    <p class="text-xs text-gray-400">aikotoba v0.2.5</p>
+                    <p class="text-xs text-gray-400">aikotoba v0.2.7</p>
                 </section>
             </div>
             <button onclick="toggleModal(false)" class="mt-6 w-full bg-gray-500 text-white font-bold py-3 rounded-xl shadow-md hover:bg-gray-600 transition active:scale-95">
@@ -197,7 +209,7 @@
         // ==========================================
         // アプリ設定
         // ==========================================
-        const APP_VERSION = 'v0.2.5';
+        const APP_VERSION = 'v0.2.7';
         const GAS_API_URL = "https://script.google.com/macros/s/AKfycby49eACsPr_lGblpklhK13gt4TroRwNyKwnQcKQ3GPhACQ8zV96YZ9_CDXfFn5wOj85/exec"; 
         const TWITTER_ID = "noki_dochibi";
         const ICON_URL = `https://unavatar.io/twitter/${TWITTER_ID}?v=${APP_VERSION}`;
@@ -376,11 +388,7 @@
             lucide.createIcons();
         }
 
-        // ==========================================
-        // ★修正ポイント: 楽曲DB結果表示
-        // ==========================================
         function handleTitleResults(data) {
-            // ヒットなし
             if ((!data.songs || data.songs.length === 0) && (!data.albums || data.albums.length === 0)) {
                 addMessage(`「${data.query}」は見つからなかったよ...📚`, 'bot');
                 return;
@@ -392,7 +400,6 @@
             if (data.songs && data.songs.length > 0) {
                 let songSection = '<div class="flex flex-col gap-4">';
                 
-                // 見出し（両方ある場合のみ表示する等の工夫もできるが、今回はシンプルに列挙）
                 if (data.albums && data.albums.length > 0) {
                      songSection += '<div class="text-xs font-bold text-sky-500 border-b border-sky-100 pb-1">🎵 曲の検索結果</div>';
                 }
@@ -432,7 +439,7 @@
                 let albumSection = '<div class="flex flex-col gap-4">';
                 
                 if (data.songs && data.songs.length > 0) {
-                     albumSection += '<div class="text-xs font-bold text-sky-500 border-b border-sky-100 pb-1">💿 アルバム・シングルの検索結果</div>';
+                     albumSection += '<div class="text-xs font-bold text-sky-500 border-b border-sky-100 pb-1">💿 収録ディスク情報</div>';
                 }
 
                 data.albums.forEach((disk) => {
