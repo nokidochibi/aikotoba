@@ -167,9 +167,9 @@
                 aikoの歌詞とか調べるやつ
                 <span id="version-display" class="ml-2 text-[10px] text-gray-400 font-normal opacity-50"></span>
             </h1>
-            <!-- ★アイコン変更: help-circle -> sparkles -->
-            <button onclick="toggleModal(true)" class="absolute right-4 text-orange-300 hover:text-orange-500 transition p-1 rounded-full hover:bg-orange-50">
-                <i data-lucide="sparkles" class="w-6 h-6"></i>
+            <!-- ★アイコン変更: sparkles -> 🌷 (絵文字) -->
+            <button onclick="toggleModal(true)" class="absolute right-4 transition p-1 rounded-full hover:bg-orange-50">
+                <span class="text-xl">🌷</span>
             </button>
         </div>
     </header>
@@ -252,7 +252,7 @@
         コピーしました！
     </div>
 
-    <!-- Readme Modal (Content Updated) -->
+    <!-- Readme Modal -->
     <div id="readme-modal" class="fixed inset-0 z-50 hidden" aria-hidden="true">
         <div class="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity" onclick="toggleModal(false)"></div>
         <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white w-[90%] max-w-sm rounded-2xl shadow-xl p-6 transition-all scale-100">
