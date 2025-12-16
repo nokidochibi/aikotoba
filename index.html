@@ -68,8 +68,6 @@
         /* 通常テーマ設定 */
         .theme-lyrics .tab-btn.active[data-tab="lyrics"] { border-color: #f97316; color: #f97316; }
         .theme-title .tab-btn.active[data-tab="title"] { border-color: #0ea5e9; color: #0ea5e9; }
-        /* しりとりタブボタンは削除しましたが、CSS定義は念のため残します */
-        .theme-shiritori .tab-btn.active[data-tab="shiritori"] { border-color: #ec4899; color: #ec4899; }
         
         .theme-lyrics .text-theme { color: #f97316; }
         .theme-lyrics .bg-theme { background-color: #f97316; }
@@ -236,7 +234,6 @@
                 <i data-lucide="disc" class="w-5 h-5 mb-0.5"></i>
                 <span class="text-base leading-none">楽曲</span>
             </button>
-            <!-- しりとりボタンは削除 -->
         </div>
     </footer>
 
@@ -269,7 +266,7 @@
                     <p class="text-xs">タイトル「aikotoba」をダブルタップすると...<br>※戻る時もダブルタップしてね。</p>
                 </section>
                 <section class="text-center pt-2">
-                    <p class="text-xs text-gray-400">aikotoba v0.3.3</p>
+                    <p class="text-xs text-gray-400">aikotoba v0.3.4</p>
                 </section>
             </div>
             <button onclick="toggleModal(false)" class="mt-6 w-full bg-gray-500 text-white font-bold py-3 rounded-xl shadow-md hover:bg-gray-600 transition active:scale-95">
@@ -279,13 +276,13 @@
     </div>
 
     <script>
-        const APP_VERSION = 'v0.3.3';
+        const APP_VERSION = 'v0.3.4';
         const GAS_API_URL = "https://script.google.com/macros/s/AKfycby49eACsPr_lGblpklhK13gt4TroRwNyKwnQcKQ3GPhACQ8zV96YZ9_CDXfFn5wOj85/exec"; 
         const TWITTER_ID = "noki_dochibi";
         const ICON_URL = `https://unavatar.io/twitter/${TWITTER_ID}?v=${APP_VERSION}`;
 
         let currentMode = 'lyrics'; 
-        let lastMode = 'lyrics'; // 裏モード前のモード保存用
+        let lastMode = 'lyrics'; 
         let isDarkMode = false; 
 
         const LOADING_MESSAGES = {
@@ -327,14 +324,14 @@
                 isDarkMode = false;
                 dom.body.classList.remove('dark-mode');
                 switchTab(lastMode);
-                addMessage("通常モードに戻ったよ！", 'bot');
+                // メッセージ削除
             } else {
                 // 裏モードへ
                 lastMode = currentMode;
                 isDarkMode = true;
                 dom.body.classList.add('dark-mode');
                 switchTab('shiritori');
-                addMessage("裏モードへようこそ...😎<br>ダークなしりとりを始めよう。<br>（戻るにはタイトルをダブルタップ）", 'bot');
+                // メッセージ削除
             }
         };
 
@@ -342,7 +339,6 @@
             if (currentMode === mode) return;
             currentMode = mode;
             
-            // タブの見た目更新 (存在するボタンのみ)
             dom.tabBtns.forEach(btn => {
                 if (btn.dataset.tab === mode) {
                     btn.classList.add('active');
@@ -351,14 +347,12 @@
                 }
             });
 
-            // コンテナ切り替え
             dom.containerLyrics.classList.add('hidden');
             dom.containerTitle.classList.add('hidden');
             dom.containerShiritori.classList.add('hidden');
             dom.randomContainer.classList.add('opacity-0', 'h-0', 'overflow-hidden');
             dom.randomContainer.style.height = '0';
 
-            // モード別表示
             if (mode === 'lyrics') {
                 dom.body.classList.replace('theme-title', 'theme-lyrics');
                 dom.body.classList.replace('theme-shiritori', 'theme-lyrics');
@@ -438,16 +432,40 @@
             }
         });
 
-        // しりとり結果表示
+        // しりとり結果表示 (修正)
         function handleShiritoriResults(data) {
+            // ゲームオーバー判定 (負け or 勝ち/候補なし)
+            // Backendは候補がない場合、game_over: falseだがcandidates: []で返してくる
+            if (data.game_over || (data.candidates && data.candidates.length === 0)) {
+                let contentHtml = `<div class="flex flex-col gap-2"><p>${data.message}</p>`;
+                
+                // 勝ち（候補切れ）の場合のメッセージ
+                if (!data.game_over && data.candidates.length === 0) {
+                     contentHtml += `<p class="text-xs text-gray-400 mt-1">（続く曲がないみたい！すごい！あなたの勝ち！）</p>`;
+                }
+
+                // ボタン表示
+                contentHtml += `
+                    <div class="flex gap-2 mt-3">
+                        <button onclick="restartShiritori()" class="flex-1 bg-pink-500 text-white border border-pink-600 px-3 py-2 rounded-lg text-xs font-bold shadow-sm hover:bg-pink-600 active:scale-95 transition">
+                            もう一度遊ぶ
+                        </button>
+                        <button onclick="exitShiritori()" class="flex-1 bg-gray-700 text-white border border-gray-600 px-3 py-2 rounded-lg text-xs font-bold shadow-sm hover:bg-gray-600 active:scale-95 transition">
+                            おしまいにする
+                        </button>
+                    </div>
+                `;
+                contentHtml += `</div>`;
+                addMessage(contentHtml, 'bot');
+                return;
+            }
+
+            // 継続中
             if (!data.found) {
                 addMessage(data.message, 'bot');
                 return;
             }
-            if (data.game_over) {
-                addMessage(data.message, 'bot');
-                return;
-            }
+
             let contentHtml = `<div class="flex flex-col gap-2"><p>${data.message}</p>`;
             if (data.candidates && data.candidates.length > 0) {
                 contentHtml += `<div class="flex flex-wrap gap-2 mt-2">`;
@@ -455,12 +473,27 @@
                     contentHtml += `<button onclick="sendShiritoriAnswer('${cand.title}')" class="bg-white border border-pink-200 text-pink-600 px-3 py-1.5 rounded-full text-xs font-bold shadow-sm hover:bg-pink-50 active:scale-95 transition">${cand.title}</button>`;
                 });
                 contentHtml += `</div>`;
-            } else {
-                contentHtml += `<p class="text-xs text-gray-500 mt-2">（もう候補が見つからないみたい...！あなたの勝ちかも！？）</p>`;
             }
             contentHtml += `</div>`;
             addMessage(contentHtml, 'bot');
         }
+
+        // 新規関数: しりとりリセット
+        window.restartShiritori = function() {
+            dom.containerShiritori.innerHTML = `
+                <div class="flex items-start space-x-2">
+                    <img class="bot-icon w-10 h-10 rounded-full border border-gray-200 bg-white shadow-sm z-10" src="${ICON_URL}">
+                    <div class="bubble bubble-left bg-white px-4 py-3 shadow-sm max-w-[80%] text-sm break-words leading-relaxed">
+                        <p>しりとりリセット！<br>最初の曲名を入力してね。<br>（例：カブトムシ）</p>
+                    </div>
+                </div>
+            `;
+        };
+
+        // 新規関数: しりとり終了
+        window.exitShiritori = function() {
+            activateSecretMode(); // トグルで戻る
+        };
 
         // 共通関数群
         function handleLyricsResults(data) {
