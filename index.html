@@ -90,7 +90,6 @@
 </head>
 <body id="app-body" class="bg-orange-50 text-gray-800 h-screen flex flex-col theme-lyrics transition-colors duration-300">
 
-    <!-- ヘッダー -->
     <header class="bg-white/95 backdrop-blur-sm shadow-sm flex flex-col items-center justify-center sticky top-0 z-20 border-b border-theme relative transition-colors duration-300 h-14">
         <div class="w-full flex items-center justify-center relative">
             <h1 class="text-lg font-bold text-theme tracking-wider flex items-baseline transition-colors duration-300">
@@ -103,7 +102,6 @@
         </div>
     </header>
 
-    <!-- チャットエリア (歌詞) -->
     <main id="chat-container-lyrics" class="flex-1 overflow-y-auto p-4 space-y-4 no-scrollbar pb-56"> 
         <div class="flex items-start space-x-2">
             <img class="bot-icon w-10 h-10 rounded-full border border-gray-200 bg-white shadow-sm z-10" alt="icon">
@@ -115,7 +113,6 @@
         </div>
     </main>
 
-    <!-- チャットエリア (DB) -->
     <main id="chat-container-title" class="flex-1 overflow-y-auto p-4 space-y-4 no-scrollbar pb-56 hidden"> 
         <div class="flex items-start space-x-2">
             <img class="bot-icon w-10 h-10 rounded-full border border-gray-200 bg-white shadow-sm z-10" alt="icon">
@@ -127,17 +124,12 @@
         </div>
     </main>
 
-    <!-- フッター (固定) -->
     <footer class="bg-white border-t border-gray-100 fixed bottom-0 w-full safe-pb z-30 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]" style="padding-bottom: calc(env(safe-area-inset-bottom));">
         
-        <!-- ランダム歌詞エリア (歌詞モードのみ表示) -->
         <div id="random-lyric-container" class="bg-orange-50/50 border-b border-orange-100 py-1 px-4 transition-all duration-300 opacity-0 h-0 overflow-hidden">
-             <div id="random-lyric-area" class="text-[10px] text-orange-400 text-center truncate h-4 leading-4">
-                 <!-- ここに歌詞が入ります -->
-             </div>
+             <div id="random-lyric-area" class="text-[10px] text-orange-400 text-center truncate h-4 leading-4"></div>
         </div>
 
-        <!-- タブ切り替え -->
         <div class="flex w-full px-2 pt-1 pb-1 gap-2 text-xs font-medium justify-center bg-white">
             <button id="tab-lyrics" data-tab="lyrics" onclick="switchTab('lyrics')" class="tab-btn active flex-1 py-4 text-center rounded-lg hover:bg-gray-50">
                 歌詞検索
@@ -147,7 +139,6 @@
             </button>
         </div>
 
-        <!-- 入力フォーム -->
         <form id="search-form" class="flex items-center gap-2 px-3 pb-3 pt-1">
             <div class="flex-1 bg-gray-100 rounded-full flex items-center px-4 py-2.5 transition-colors focus-within:bg-white focus-within:ring-1 focus-within:ring-gray-200 border border-transparent focus-within:border-gray-200">
                 <input type="text" id="search-input" 
@@ -162,12 +153,10 @@
         </form>
     </footer>
 
-    <!-- トースト通知 -->
     <div id="toast" class="fixed top-24 left-1/2 transform -translate-x-1/2 bg-gray-800/80 backdrop-blur text-white text-xs py-2 px-4 rounded-full opacity-0 transition-opacity duration-300 pointer-events-none z-50 shadow-lg">
         コピーしました！
     </div>
 
-    <!-- Readme モーダル -->
     <div id="readme-modal" class="fixed inset-0 z-50 hidden" aria-hidden="true">
         <div class="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity" onclick="toggleModal(false)"></div>
         <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white w-[90%] max-w-sm rounded-2xl shadow-xl p-6 transition-all scale-100">
@@ -195,7 +184,7 @@
                     </p>
                 </section>
                 <section class="text-center pt-2">
-                    <p class="text-xs text-gray-400">aikotoba v0.2.4</p>
+                    <p class="text-xs text-gray-400">aikotoba v0.2.5</p>
                 </section>
             </div>
             <button onclick="toggleModal(false)" class="mt-6 w-full bg-gray-500 text-white font-bold py-3 rounded-xl shadow-md hover:bg-gray-600 transition active:scale-95">
@@ -208,12 +197,11 @@
         // ==========================================
         // アプリ設定
         // ==========================================
-        const APP_VERSION = 'v0.2.4';
+        const APP_VERSION = 'v0.2.5';
         const GAS_API_URL = "https://script.google.com/macros/s/AKfycby49eACsPr_lGblpklhK13gt4TroRwNyKwnQcKQ3GPhACQ8zV96YZ9_CDXfFn5wOj85/exec"; 
         const TWITTER_ID = "noki_dochibi";
         const ICON_URL = `https://unavatar.io/twitter/${TWITTER_ID}?v=${APP_VERSION}`;
 
-        // 状態管理
         let currentMode = 'lyrics'; 
 
         const LOADING_MESSAGES = {
@@ -244,20 +232,17 @@
             botIcons: document.querySelectorAll('.bot-icon')
         };
 
-        // 初期化
         window.addEventListener('DOMContentLoaded', () => {
             lucide.createIcons();
             if (dom.version) dom.version.textContent = APP_VERSION;
             dom.botIcons.forEach(img => img.src = ICON_URL);
             new Image().src = ICON_URL;
             
-            // 【変更点】初期状態ではランダムエリアを非表示・空にする（誤解を防ぐため）
             dom.randomArea.textContent = "";
             dom.randomContainer.classList.add('opacity-0', 'h-0', 'overflow-hidden');
             dom.randomContainer.style.height = '0';
         });
 
-        // タブ切り替え
         window.switchTab = function(mode) {
             if (currentMode === mode) return;
             currentMode = mode;
@@ -273,32 +258,24 @@
             if (mode === 'lyrics') {
                 dom.body.classList.replace('theme-title', 'theme-lyrics');
                 dom.body.classList.replace('bg-sky-50', 'bg-orange-50');
-                
                 dom.containerLyrics.classList.remove('hidden');
                 dom.containerTitle.classList.add('hidden');
                 
-                // 歌詞がある場合のみ表示
                 if (dom.randomArea.textContent.trim() !== "") {
                     dom.randomContainer.style.height = 'auto';
                     dom.randomContainer.classList.remove('opacity-0', 'h-0', 'overflow-hidden');
                     dom.randomContainer.classList.add('opacity-100');
                 }
-
                 dom.searchInput.placeholder = "例：甘い匂いに";
                 document.documentElement.style.setProperty('--bubble-color', '#f97316');
-
             } else {
                 dom.body.classList.replace('theme-lyrics', 'theme-title');
                 dom.body.classList.replace('bg-orange-50', 'bg-sky-50');
-
                 dom.containerTitle.classList.remove('hidden');
                 dom.containerLyrics.classList.add('hidden');
-
-                // ランダムエリア非表示
                 dom.randomContainer.classList.remove('opacity-100');
                 dom.randomContainer.classList.add('opacity-0', 'h-0', 'overflow-hidden');
                 dom.randomContainer.style.height = '0';
-
                 dom.searchInput.placeholder = "例：果てしない二人、湿った夏の始まり";
                 document.documentElement.style.setProperty('--bubble-color', '#0ea5e9');
             }
@@ -308,7 +285,6 @@
             return currentMode === 'lyrics' ? dom.containerLyrics : dom.containerTitle;
         }
 
-        // 送信処理
         dom.searchForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const query = dom.searchInput.value.trim();
@@ -316,13 +292,11 @@
 
             addMessage(query, 'user');
             dom.searchInput.value = '';
-
             const loadingId = addLoading();
 
             try {
                 const response = await fetch(`${GAS_API_URL}?q=${encodeURIComponent(query)}&mode=${currentMode}`);
                 const data = await response.json();
-
                 removeLoading(loadingId);
 
                 if (data.status === 'success') {
@@ -334,7 +308,6 @@
                 } else {
                     addMessage("ごめんね、うまく探せなかったみたい... (エラー)", 'bot');
                 }
-
             } catch (error) {
                 removeLoading(loadingId);
                 console.error(error);
@@ -342,14 +315,9 @@
             }
         });
 
-        // ---------------------------------------------------------
-        // 歌詞検索 結果表示
-        // ---------------------------------------------------------
         function handleLyricsResults(data) {
-            // ランダム歌詞更新
             if (data.random_message) {
                 dom.randomArea.textContent = 'ランダム表示：' + data.random_message;
-                // 表示アニメーション
                 dom.randomContainer.style.height = 'auto';
                 dom.randomContainer.classList.remove('opacity-0', 'h-0', 'overflow-hidden');
                 dom.randomContainer.classList.add('opacity-100');
@@ -365,7 +333,6 @@
             }
 
             let contentHtml = '<div class="flex flex-col animate-fade-in">';
-            
             data.results.forEach((item, index) => {
                 const borderClass = index < data.results.length - 1 ? 'border-b border-dashed border-theme' : '';
                 const highlightedPhrase = item.phrase.replace(
@@ -373,7 +340,6 @@
                     '<span class="highlight-text">$1</span>'
                 );
                 const displayTextHtml = `${highlightedPhrase} <span class="text-xs text-gray-400 ml-1">（${item.title}）</span>`;
-
                 contentHtml += `
                     <div onclick="copyToClipboard('${item.display_text.replace(/'/g, "\\'")}')" 
                          class="${borderClass} py-3 cursor-pointer hover:bg-theme-soft transition relative group select-none">
@@ -386,7 +352,6 @@
             contentHtml += '</div>';
 
             const allText = data.results.map(item => item.display_text).join('\\n').replace(/'/g, "\\'");
-            
             contentHtml += `
                 <div class="animate-fade-in mt-3 pt-2 border-t border-dashed border-theme">
                     <div class="flex flex-wrap items-center justify-between gap-2">
@@ -407,24 +372,32 @@
                     </button>
                 </div>
             `;
-
             addMessage(contentHtml, 'bot', true);
             lucide.createIcons();
         }
 
-        // ---------------------------------------------------------
-        // 楽曲DB 結果表示
-        // ---------------------------------------------------------
+        // ==========================================
+        // ★修正ポイント: 楽曲DB結果表示
+        // ==========================================
         function handleTitleResults(data) {
-            if (!data.results || data.results.length === 0) {
+            // ヒットなし
+            if ((!data.songs || data.songs.length === 0) && (!data.albums || data.albums.length === 0)) {
                 addMessage(`「${data.query}」は見つからなかったよ...📚`, 'bot');
                 return;
             }
 
-            let contentHtml = '<div class="flex flex-col gap-4 animate-fade-in">';
+            let contentHtml = '<div class="flex flex-col gap-6 animate-fade-in">';
 
-            if (data.type === 'song') {
-                data.results.forEach((song, idx) => {
+            // 1. 曲の結果を表示
+            if (data.songs && data.songs.length > 0) {
+                let songSection = '<div class="flex flex-col gap-4">';
+                
+                // 見出し（両方ある場合のみ表示する等の工夫もできるが、今回はシンプルに列挙）
+                if (data.albums && data.albums.length > 0) {
+                     songSection += '<div class="text-xs font-bold text-sky-500 border-b border-sky-100 pb-1">🎵 曲の検索結果</div>';
+                }
+
+                data.songs.forEach((song, idx) => {
                     const hasDivider = idx > 0 ? 'border-t border-sky-100 pt-4' : '';
                     const ageText = song.age_at_release ? `リリース時のaikoは<span class="font-bold text-sky-600">${song.age_at_release}歳</span>だよ。` : '';
                     
@@ -432,7 +405,7 @@
                         `<a href="${song.link_url}" target="_blank" class="text-sky-600 underline font-bold hover:text-sky-400">${song.title}</a>` :
                         `<span class="font-bold text-gray-800">${song.title}</span>`;
 
-                    contentHtml += `
+                    songSection += `
                         <div class="${hasDivider}">
                             <div class="mb-2 text-base">
                                 ${songLink} <span class="text-xs text-gray-400">(${song.reading || ''})</span>
@@ -450,10 +423,19 @@
                         </div>
                     `;
                 });
+                songSection += '</div>';
+                contentHtml += songSection;
+            }
 
-            } else {
-                // ディスク情報
-                data.results.forEach((disk) => {
+            // 2. アルバムの結果を表示
+            if (data.albums && data.albums.length > 0) {
+                let albumSection = '<div class="flex flex-col gap-4">';
+                
+                if (data.songs && data.songs.length > 0) {
+                     albumSection += '<div class="text-xs font-bold text-sky-500 border-b border-sky-100 pb-1">💿 アルバム・シングルの検索結果</div>';
+                }
+
+                data.albums.forEach((disk) => {
                     const songList = disk.songs.map((s, i) => 
                         `<li class="py-1 border-b border-sky-50 last:border-0 flex gap-2">
                             <span class="text-sky-400 w-6 text-right font-mono text-xs pt-0.5">${s.order}.</span>
@@ -461,7 +443,7 @@
                         </li>`
                     ).join('');
 
-                    contentHtml += `
+                    albumSection += `
                         <div class="bg-sky-50/50 rounded-xl p-4 border border-sky-100">
                             <h3 class="font-bold text-sky-700 mb-1">💿 ${disk.disk_name}</h3>
                             <p class="text-xs text-gray-500 mb-3">${disk.release_date} 発売</p>
@@ -471,6 +453,8 @@
                         </div>
                     `;
                 });
+                albumSection += '</div>';
+                contentHtml += albumSection;
             }
 
             contentHtml += '</div>';
@@ -488,28 +472,22 @@
             lucide.createIcons();
         }
 
-        // 共通
         function addMessage(htmlOrText, type, shouldScroll = true) {
             const div = document.createElement('div');
             div.className = `flex items-start space-x-2 message-row ${type === 'user' ? 'justify-end' : ''}`;
-
             const iconHtml = type === 'bot' 
                 ? `<img src="${ICON_URL}" class="w-10 h-10 rounded-full border border-gray-200 bg-white flex-shrink-0 shadow-sm z-10">` 
                 : '';
-            
             const bubbleClass = type === 'user' 
                 ? 'bubble bubble-right text-white' 
                 : 'bubble bubble-left bg-white text-gray-800';
-            
             const userBgClass = currentMode === 'lyrics' ? 'bg-orange-500' : 'bg-sky-500';
             const finalBubbleClass = type === 'user' ? `${bubbleClass} ${userBgClass}` : bubbleClass;
-
             const contentHtml = `
                 <div class="${finalBubbleClass} px-4 py-3 shadow-sm max-w-[85%] text-sm break-words leading-relaxed">
                     ${htmlOrText}
                 </div>
             `;
-
             div.innerHTML = type === 'bot' ? iconHtml + contentHtml : contentHtml;
             getActiveContainer().appendChild(div);
             if (shouldScroll) scrollToBottom();
@@ -520,10 +498,8 @@
             const div = document.createElement('div');
             div.id = id;
             div.className = "flex items-start space-x-2";
-            
             const msgs = LOADING_MESSAGES[currentMode];
             const randomMsg = msgs[Math.floor(Math.random() * msgs.length)];
-
             div.innerHTML = `
                 <img src="${ICON_URL}" class="w-10 h-10 rounded-full border border-gray-200 bg-white flex-shrink-0 shadow-sm z-10">
                 <div class="bubble bubble-left bg-white px-4 py-3 shadow-sm">
